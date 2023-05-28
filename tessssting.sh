@@ -1,4 +1,32 @@
-#!/bin/bash
+# !/ bin / bash
+# Function to display usage information
+
+output_format() {
+
+    filename=$(basename -- "$log_file")
+    extension="${filename##*.}"
+    # Check file extension
+    if [ "$extension" == "csv" ]; then
+        echo "File is a CSV"
+    elif [ "$extension" == "log" ]; then
+        echo "File is a TXT"
+    elif [ "$extension" == "json" ]; then
+        echo "File is a JSON"
+    else
+        echo "File is not a CSV, TXT, or JSON"
+    exit 1
+    fi
+}
+
+usage () {
+    echo " Usage : $0 [ options ] [ log_file ...] "
+    echo " Options : "
+    echo " -f , -- format Define custom log format "
+    echo " -t , -- threshold Set a threshold for displaying results "
+    echo " -o , -- output Specify output format ( text , csv , json ) "
+    echo " -h , -- help Display this help message "
+}
+
 
 log_file="random_apache_log.log"
 
@@ -57,3 +85,41 @@ echo "HTTPS:"
 for i in "${!method_arr[@]}"; do
 	echo "$i: ${method_arr[$i]}"
 done
+
+
+# Parse command - line arguments
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -f | --format )
+        custom_format="$2"
+        shift
+        ;;
+
+        -t | --threshold )
+        threshold="$2"
+        shift
+        ;;
+
+        -o )
+        output_format
+        shift
+        ;;
+
+        -h | --help )
+        usage
+        exit 0
+        ;;
+
+        *)
+        log_files+="$1"
+        ;;
+    esac
+    shift
+done
+
+# # Check if log files are provided
+# if [[ -z "${log_files[*]}" ]]; then
+#     echo " Error : No log files provided . "
+#     usage
+#     exit 1
+# fi
