@@ -27,14 +27,32 @@ usage () {
     echo " -h , -- help Display this help message "
 }
 
+declare -A ip_arr
 
-log_file="random_apache_log.log"
+threshold() {
+
+    read -p "Enter threshold value: " threshold
+    # Process log file and filter results based on threshold
+
+        count=${#ip_arr[@]}
+        for ip in "${ip_arr[@]}"; do
+        if [ "$count" -ge "$threshold" ]; then
+            echo "$ip"
+        fi
+        done
+}
+    
+
+
+
+
+log_file="$2"
 
 # Filtering options
 ip_filter="^59\." # Only process lines with IP addresses starting with "10."
 method_filter="POST" # Only process lines with a "POST" HTTP method
 
-declare -A ip_arr
+
 declare -A url_arr
 declare -A method_arr
 declare -A date_arr
@@ -42,46 +60,91 @@ declare -A system_arr
 
 echo "Reading file: $log_file"
 
-while read line; do
+for logs in $log_file; do
+    if [ -d "$logs" ]; then
+        # Log file is a directory, process all files in directory
+        for file in "$logs"/*; do
+            # Skip directories and non-log files
+            if [ -f "$file" ] && [[ "$file" == *.log ]]; then
 
-	# Apply filters
-	if ! [[ $line =~ $ip_filter ]]; then
-		continue
-	fi
+                while read line; do
 
-	if ! [[ $line =~ $method_filter ]]; then
-		continue
-	fi
+                    # Apply filters
+                    # if ! [[ $line =~ $ip_filter ]]; then
+                    # 	continue
+                    # fi
 
-	# Extract fields
-	ip=$(echo $line | awk '{print $1}')
-	method=$(echo $line | awk '{print $8}')
-	
+                    # if ! [[ $line =~ $method_filter ]]; then
+                    # 	continue
+                    # fi
 
-    # Aggregate data
-    if [[ ${ip_arr[$ip]+_} ]]; then
-      ip_arr[$ip]=$((ip_arr[$ip]+1))
+                    # Extract fields
+                    ip=$(echo $line | awk '{print $1}')
+                    method=$(echo $line | awk '{print $6}')
+                    
+
+                    # Aggregate data
+                    if [[ ${ip_arr[$ip]+_} ]]; then
+                    ip_arr[$ip]=$((ip_arr[$ip]+1))
+                    else
+                    ip_arr[$ip]=1
+                    fi
+                    
+
+                    if [[ ${method_arr[$method]+_} ]]; then
+                    method_arr[$method]=$((method_arr[$method]+1))
+                    else
+                    method_arr[$method]=1
+                    fi
+
+
+
+                done < $file
+            fi
+        done
     else
-      ip_arr[$ip]=1
+        while read line; do
+
+                    # Apply filters
+                    # if ! [[ $line =~ $ip_filter ]]; then
+                    # 	continue
+                    # fi
+
+                    # if ! [[ $line =~ $method_filter ]]; then
+                    # 	continue
+                    # fi
+
+                    # Extract fields
+                    ip=$(echo $line | awk '{print $1}')
+                    method=$(echo $line | awk '{print $8}')
+                    
+
+                    # Aggregate data
+                    if [[ ${ip_arr[$ip]+_} ]]; then
+                    ip_arr[$ip]=$((ip_arr[$ip]+1))
+                    else
+                    ip_arr[$ip]=1
+                    fi
+                    
+
+                    if [[ ${method_arr[$method]+_} ]]; then
+                    method_arr[$method]=$((method_arr[$method]+1))
+                    else
+                    method_arr[$method]=1
+                    fi
+        done < $log_file
     fi
-    
-
-    if [[ ${method_arr[$method]+_} ]]; then
-      method_arr[$method]=$((method_arr[$method]+1))
-    else
-      method_arr[$method]=1
-    fi
+done
 
 
 
-done < $log_file
 
 echo "IP:"
 for i in "${!ip_arr[@]}"; do
 	echo "$i: ${ip_arr[$i]}"
 done
 
-echo "HTTPS:"
+echo "METHODS:"
 for i in "${!method_arr[@]}"; do
 	echo "$i: ${method_arr[$i]}"
 done
@@ -96,7 +159,7 @@ while [[ "$#" -gt 0 ]]; do
         ;;
 
         -t | --threshold )
-        threshold="$2"
+        threshold
         shift
         ;;
 
