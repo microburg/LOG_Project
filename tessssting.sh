@@ -68,11 +68,20 @@ threshold() {
     read -p "Enter threshold value: " threshold
     # Process log file and filter results based on threshold
 
-        count=${#ip_arr[@]}
-        for ip in "${ip_arr[@]}"; do
-        if [ "$count" -ge "$threshold" ]; then
-            echo "$ip"
-        fi
+        num=0
+        for i in "${!ip_arr[@]}"; do
+            if  ((num < threshold)); then
+                echo "$i"
+                (( num++ ))
+            fi
+        done
+
+        num1=0
+        for i in "${!method_arr[@]}"; do
+            if  ((num1 < threshold + 1)); then
+                echo "$i"
+                (( num1++ ))
+            fi
         done
 }
     
@@ -140,17 +149,17 @@ for logs in $log_file; do
         while read line; do
 
                     # Apply filters
-                    if ! [[ $line =~ $ip_filter ]]; then
-                    	continue
-                    fi
+                    # if ! [[ $line =~ $ip_filter ]]; then
+                    # 	continue
+                    # fi
 
-                    if ! [[ $line =~ $method_filter ]]; then
-                    	continue
-                    fi
+                    # if ! [[ $line =~ $method_filter ]]; then
+                    # 	continue
+                    # fi
 
                     # Extract fields
                     ip=$(echo $line | awk '{print $1}')
-                    method=$(echo $line | awk '{print $8}')
+                    method=$(echo $line | awk '{print $6}')
                     
 
                     # Aggregate data
