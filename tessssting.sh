@@ -5,6 +5,9 @@ output_format() {
 
     filename=$(basename -- "$log_file")
     extension="${filename##*.}"
+
+    echo "ENTER CSV, TXT, JSON" 
+    read format
     # Check file extension
     if [ "$extension" == "csv" ]; then
         echo "File is a CSV"
@@ -15,6 +18,37 @@ output_format() {
     else
         echo "File is not a CSV, TXT, or JSON"
     exit 1
+    fi
+
+    if [ "$format" == "CSV" ]; then
+        for i in "${ip_arr[@]}"; do
+            for j in "${!method_arr[@]}"; do 
+                echo "$j,$i"
+            done
+        done
+
+    fi
+
+    if [ "$format" == "TXT" ]; then
+        for i in "${!ip_arr[@]}"; do
+            echo "IP ADDRESS: $i"
+        done
+        for j in "${!method_arr[@]}"; do 
+            echo "METHOD:$j"
+        done
+
+    fi
+
+    if [ "$format" == "JSON" ]; then
+        for i in "${!ip_arr[@]}"; do
+            echo "{"
+            echo "\"remote_host\": \"$i\","
+        done
+        for j in "${!method_arr[@]}"; do 
+            echo "\"remote_host\": \"$j\","
+            echo "}"
+        done
+
     fi
 }
 
@@ -27,7 +61,7 @@ usage () {
     echo " -h , -- help Display this help message "
 }
 
-declare -A ip_arr
+
 
 threshold() {
 
@@ -52,7 +86,7 @@ log_file="$2"
 ip_filter="^59\." # Only process lines with IP addresses starting with "10."
 method_filter="POST" # Only process lines with a "POST" HTTP method
 
-
+declare -A ip_arr
 declare -A url_arr
 declare -A method_arr
 declare -A date_arr
@@ -70,13 +104,13 @@ for logs in $log_file; do
                 while read line; do
 
                     # Apply filters
-                    # if ! [[ $line =~ $ip_filter ]]; then
-                    # 	continue
-                    # fi
+                    if ! [[ $line =~ $ip_filter ]]; then
+                    	continue
+                    fi
 
-                    # if ! [[ $line =~ $method_filter ]]; then
-                    # 	continue
-                    # fi
+                    if ! [[ $line =~ $method_filter ]]; then
+                    	continue
+                    fi
 
                     # Extract fields
                     ip=$(echo $line | awk '{print $1}')
@@ -106,13 +140,13 @@ for logs in $log_file; do
         while read line; do
 
                     # Apply filters
-                    # if ! [[ $line =~ $ip_filter ]]; then
-                    # 	continue
-                    # fi
+                    if ! [[ $line =~ $ip_filter ]]; then
+                    	continue
+                    fi
 
-                    # if ! [[ $line =~ $method_filter ]]; then
-                    # 	continue
-                    # fi
+                    if ! [[ $line =~ $method_filter ]]; then
+                    	continue
+                    fi
 
                     # Extract fields
                     ip=$(echo $line | awk '{print $1}')
